@@ -32,7 +32,7 @@ class Client
      * @param string $clientId
      * @param string $clientSecret
      */
-    function setCredentials($salesforceLoginUrl, $clientId, $clientSecret)
+    function __construct($salesforceLoginUrl, $clientId, $clientSecret)
     {
         $this->salesforceLoginUrl = $salesforceLoginUrl;
         $this->clientId           = $clientId;
