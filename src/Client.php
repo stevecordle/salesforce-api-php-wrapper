@@ -27,9 +27,16 @@ class Client
      */
     private $baseUrl;
 
-    function __construct($salesforceLoginUrl)
+    /**
+     * @param string $salesforceLoginUrl
+     * @param string $clientId
+     * @param string $clientSecret
+     */
+    function __construct($salesforceLoginUrl, $clientId, $clientSecret)
     {
         $this->salesforceLoginUrl = $salesforceLoginUrl;
+        $this->clientId           = $clientId;
+        $this->clientSecret       = $clientSecret;
     }
 
 
