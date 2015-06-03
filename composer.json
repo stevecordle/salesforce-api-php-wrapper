@@ -1,0 +1,23 @@
+{
+    "name": "crunch/salesforce",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Arthur Guy",
+            "email": "arthur@assys.net"
+        }
+    ],
+    "require": {
+        "nesbot/carbon": "^1.19"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.6",
+        "mockery/mockery": "^0.9.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Crunch\\Salesforce\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
