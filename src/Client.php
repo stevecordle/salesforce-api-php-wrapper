@@ -2,8 +2,19 @@
 
 class Client
 {
+    /**
+     * @var string
+     */
     protected $salesforceLoginUrl;
+
+    /**
+     * @var string
+     */
     protected $clientId;
+
+    /**
+     * @var string
+     */
     protected $clientSecret;
 
     /**
@@ -15,6 +26,11 @@ class Client
      * @var string
      */
     private $baseUrl;
+
+    function __construct($salesforceLoginUrl)
+    {
+        $this->salesforceLoginUrl = $salesforceLoginUrl;
+    }
 
 
     /**
