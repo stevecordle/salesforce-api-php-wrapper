@@ -29,9 +29,6 @@ class Client
 
     /**
      * @param ClientConfigInterface $clientConfigInterface
-     * @internal param string $salesforceLoginUrl
-     * @internal param string $clientId
-     * @internal param string $clientSecret
      */
     function __construct(ClientConfigInterface $clientConfigInterface)
     {
