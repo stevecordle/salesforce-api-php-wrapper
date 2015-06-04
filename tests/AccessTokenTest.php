@@ -24,7 +24,8 @@ class AccessTokenTest extends PHPUnit_Framework_TestCase
             'accessToken' => '',
             'apiUrl' => '',
         ]);
-        $token = \Crunch\Salesforce\AccessToken::createFromJson($jsonToken);
+        $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+        $token = $tokenGenerator->createFromJson($jsonToken);
 
         $this->assertInstanceOf(\Crunch\Salesforce\AccessToken::class, $token);
     }
@@ -42,7 +43,8 @@ class AccessTokenTest extends PHPUnit_Framework_TestCase
             'access_token' => '',
             'instance_url' => '',
         ];
-        $token = \Crunch\Salesforce\AccessToken::createFromSalesforceResponse($responseData);
+        $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+        $token = $tokenGenerator->createFromSalesforceResponse($responseData);
 
         $this->assertInstanceOf(\Crunch\Salesforce\AccessToken::class, $token);
     }

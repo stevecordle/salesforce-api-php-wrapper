@@ -18,7 +18,7 @@ class Client
     protected $clientSecret;
 
     /**
-     * @var \Crunch\Salesforce\AccessToken
+     * @var AccessToken
      */
     private $accessToken;
 
@@ -250,9 +250,9 @@ class Client
     }
 
     /**
-     * @param \Crunch\Salesforce\AccessToken $accessToken
+     * @param AccessToken $accessToken
      */
-    public function setAccessToken($accessToken)
+    public function setAccessToken(AccessToken $accessToken)
     {
         $this->accessToken = $accessToken;
         $this->baseUrl     = $accessToken->getApiUrl();
