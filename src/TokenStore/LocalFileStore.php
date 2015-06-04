@@ -1,6 +1,9 @@
-<?php namespace Crunch\Salesforce;
+<?php namespace Crunch\Salesforce\TokenStore;
 
-class LocalFileStore implements TokenStoreInterface
+use Crunch\Salesforce\AccessToken;
+use Crunch\Salesforce\AccessTokenGenerator;
+
+class LocalFileStore implements StoreInterface
 {
 
     /**

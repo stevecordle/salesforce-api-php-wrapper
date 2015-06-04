@@ -1,6 +1,8 @@
-<?php namespace Crunch\Salesforce;
+<?php namespace Crunch\Salesforce\TokenStore;
 
-interface TokenStoreInterface
+use Crunch\Salesforce\AccessToken;
+
+interface StoreInterface
 {
 
     /**
