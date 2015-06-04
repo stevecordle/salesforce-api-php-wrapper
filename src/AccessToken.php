@@ -51,80 +51,48 @@ class AccessToken
     private $apiUrl;
 
     /**
-     * Create an access token object from the salesforce response data
-     *
-     * @param array $salesforceToken
-     * @return AccessToken
+     * @param string         $id
+     * @param \Carbon\Carbon $dateIssued
+     * @param \Carbon\Carbon $dateExpires
+     * @param array          $scope
+     * @param string         $tokenType
+     * @param string         $refreshToken
+     * @param string         $signature
+     * @param string         $accessToken
+     * @param string         $apiUrl
      */
-    public static function createFromSalesforceResponse(array $salesforceToken)
-    {
-        //Create an instance of this class to work with
-        static $token = null;
-        if ($token === null) {
-            $token = new AccessToken();
-        }
-
-        $token->id = $salesforceToken['id'];
-
-        $token->dateIssued   = Carbon::createFromTimestamp((int)($salesforceToken['issued_at']/1000));
-
-        $token->dateExpires  = $token->dateIssued->copy()->addHour();
-
-        $token->scope        = explode(' ', $salesforceToken['scope']);
-
-        $token->tokenType    = $salesforceToken['token_type'];
-
-        $token->refreshToken = $salesforceToken['refresh_token'];
-
-        $token->signature    = $salesforceToken['signature'];
-
-        $token->accessToken  = $salesforceToken['access_token'];
-
-        $token->apiUrl       = $salesforceToken['instance_url'];
-
-        return $token;
+    function __construct(
+        $id,
+        $dateIssued,
+        $dateExpires,
+        $scope,
+        $tokenType,
+        $refreshToken,
+        $signature,
+        $accessToken,
+        $apiUrl
+    ) {
+        $this->id           = $id;
+        $this->dateIssued   = $dateIssued;
+        $this->dateExpires  = $dateExpires;
+        $this->scope        = $scope;
+        $this->tokenType    = $tokenType;
+        $this->refreshToken = $refreshToken;
+        $this->signature    = $signature;
+        $this->accessToken  = $accessToken;
+        $this->apiUrl       = $apiUrl;
     }
 
 
     public function updateFromSalesforceRefresh(array $salesforceToken)
     {
-        $this->dateIssued  = Carbon::createFromTimestamp((int)($salesforceToken['issued_at']/1000));
+        $this->dateIssued = Carbon::createFromTimestamp((int)($salesforceToken['issued_at'] / 1000));
 
         $this->dateExpires = $this->dateIssued->copy()->addHour();
 
-        $this->signature   = $salesforceToken['signature'];
+        $this->signature = $salesforceToken['signature'];
 
         $this->accessToken = $salesforceToken['access_token'];
-    }
-
-    public static function createFromJson($text)
-    {
-        static $token = null;
-        if ($token === null) {
-            $token = new AccessToken();
-        }
-
-        $savedToken = json_decode($text, true);
-
-        $token->id = $savedToken['id'];
-
-        $token->dateIssued = Carbon::parse($savedToken['dateIssued']);
-
-        $token->dateExpires = Carbon::parse($savedToken['dateExpires']);
-
-        $token->scope = $savedToken['scope'];
-
-        $token->tokenType = $savedToken['tokenType'];
-
-        $token->refreshToken = $savedToken['refreshToken'];
-
-        $token->signature = $savedToken['signature'];
-
-        $token->accessToken = $savedToken['accessToken'];
-
-        $token->apiUrl = $savedToken['apiUrl'];
-
-        return $token;
     }
 
     /**

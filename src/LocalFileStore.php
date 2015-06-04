@@ -4,9 +4,9 @@ class LocalFileStore implements TokenStoreInterface
 {
 
     /**
-     * @var AccessToken
+     * @var AccessTokenGenerator
      */
-    private $accessToken;
+    private $accessTokenGenerator;
 
     /**
      * @var string
@@ -20,13 +20,13 @@ class LocalFileStore implements TokenStoreInterface
 
 
     /**
-     * @param AccessToken $accessToken  An instance of the AccessToken object - needed
-     * @param string      $filePath     The path where the file will be stored, no trailing slash, must be writable
+     * @param AccessTokenGenerator $accessTokenGenerator An instance of the AccessToken object - needed
+     * @param string               $filePath The path where the file will be stored, no trailing slash, must be writable
      */
-    public function __construct(AccessToken $accessToken, $filePath)
+    public function __construct(AccessTokenGenerator $accessTokenGenerator, $filePath)
     {
-        $this->accessToken = $accessToken;
-        $this->filePath    = $filePath;
+        $this->accessTokenGenerator = $accessTokenGenerator;
+        $this->filePath             = $filePath;
     }
 
     /**
@@ -41,7 +41,7 @@ class LocalFileStore implements TokenStoreInterface
             throw new \Exception('SF access token not set');
         }
 
-        $accessToken = $this->accessToken->createFromJson($accessTokenJson);
+        $accessToken = $this->accessTokenGenerator->createFromJson($accessTokenJson);
 
         return $accessToken;
     }
