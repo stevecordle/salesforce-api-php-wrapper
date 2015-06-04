@@ -28,15 +28,16 @@ class Client
     private $baseUrl;
 
     /**
-     * @param string $salesforceLoginUrl
-     * @param string $clientId
-     * @param string $clientSecret
+     * @param ClientConfigInterface $clientConfigInterface
+     * @internal param string $salesforceLoginUrl
+     * @internal param string $clientId
+     * @internal param string $clientSecret
      */
-    function setCredentials($salesforceLoginUrl, $clientId, $clientSecret)
+    function __construct(ClientConfigInterface $clientConfigInterface)
     {
-        $this->salesforceLoginUrl = $salesforceLoginUrl;
-        $this->clientId           = $clientId;
-        $this->clientSecret       = $clientSecret;
+        $this->salesforceLoginUrl = $clientConfigInterface->getLoginUrl();
+        $this->clientId           = $clientConfigInterface->getClientId();
+        $this->clientSecret       = $clientConfigInterface->getClientSecret();
     }
 
 
