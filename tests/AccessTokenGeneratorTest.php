@@ -2,13 +2,8 @@
 
 use \Mockery as m;
 
-class AccessTokenGeneratorTest extends PHPUnit_Framework_TestCase
+class AccessTokenGeneratorTest extends TestCase
 {
-
-    public function tearDown()
-    {
-        m::close();
-    }
 
     /** @test */
     public function token_gets_generated_from_json()
