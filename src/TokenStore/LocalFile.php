@@ -3,7 +3,7 @@
 use Crunch\Salesforce\AccessToken;
 use Crunch\Salesforce\AccessTokenGenerator;
 
-class LocalFileStore implements StoreInterface
+class LocalFile implements StoreInterface
 {
 
     /**
@@ -21,15 +21,21 @@ class LocalFileStore implements StoreInterface
      */
     private $fileName = 'sf-key';
 
+    /**
+     * @var LocalFileConfigInterface
+     */
+    private $config;
+
 
     /**
-     * @param AccessTokenGenerator $accessTokenGenerator
-     * @param string               $filePath The path where the file will be stored, no trailing slash, must be writable
+     * @param AccessTokenGenerator     $accessTokenGenerator
+     * @param LocalFileConfigInterface $config
      */
-    public function __construct(AccessTokenGenerator $accessTokenGenerator, $filePath)
+    public function __construct(AccessTokenGenerator $accessTokenGenerator, LocalFileConfigInterface $config)
     {
         $this->accessTokenGenerator = $accessTokenGenerator;
-        $this->filePath             = $filePath;
+        $this->filePath             = $config->getFilePath();
+        $this->config               = $config;
     }
 
     /**
