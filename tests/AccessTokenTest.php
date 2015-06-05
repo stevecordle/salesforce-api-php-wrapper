@@ -5,10 +5,13 @@ class AccessTokenTest extends TestCase {
     /** @test */
     public function can_create_access_token()
     {
+        $issueDate  = \Carbon\Carbon::now();
+        $expiryDate = \Carbon\Carbon::now()->addHour();
+
         $token = new \Crunch\Salesforce\AccessToken(
             'abc123',
-            \Carbon\Carbon::now(),
-            \Carbon\Carbon::now()->addHour(),
+            $issueDate,
+            $expiryDate,
             'scopes',
             'type',
             'refresh-token',
@@ -21,6 +24,11 @@ class AccessTokenTest extends TestCase {
 
         $this->assertEquals('access-token', $token->getAccessToken());
         $this->assertEquals('refresh-token', $token->getRefreshToken());
+        $this->assertEquals('http://example.com', $token->getApiUrl());
+        $this->assertEquals('scopes', $token->getScope());
+
+        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateExpires());
+        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateIssued());
     }
 
     /** @test */
@@ -68,9 +76,41 @@ class AccessTokenTest extends TestCase {
             'http://example.com'
         );
 
-        $jsonArray = $token->toJson();
+        $this->isJson($token->toJson());
+        $this->isJson((string)$token, 'Token casts to a json string');
 
-        $this->isJson($jsonArray);
+    }
+
+
+    /** @test */
+    public function updates_correctly()
+    {
+        $token = new \Crunch\Salesforce\AccessToken(
+            'abc123',
+            \Carbon\Carbon::now(),
+            \Carbon\Carbon::now()->addHour(),
+            'scopes',
+            'type',
+            'refresh-token',
+            'signature',
+            'access-token',
+            'http://example.com'
+        );
+
+
+        $time = 1429281826;
+
+        $token->updateFromSalesforceRefresh([
+            'issued_at' => $time * 1000,
+            'signature' => 'new-signature',
+            'access_token' => 'new-access-token'
+        ]);
+
+        $this->assertEquals('new-access-token', $token->getAccessToken(), 'access token was updated');
+        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateExpires());
+        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateIssued());
+
+        $this->assertEquals($time, $token->getDateIssued()->timestamp, 'Timestamp saved and converted correctly');
 
     }
 }
