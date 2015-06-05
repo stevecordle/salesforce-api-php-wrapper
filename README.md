@@ -11,7 +11,6 @@ The configuration data for the client is passed in through a config file which m
 For example
 
 ```php
-
 class SalesforceConfig implements \Crunch\Salesforce\ClientConfigInterface {
 
     /**
@@ -44,7 +43,6 @@ class SalesforceConfig implements \Crunch\Salesforce\ClientConfigInterface {
 The Salesforce client can then be instantiated with the config object and an instance of Guzzle client.
 
 ```php
-
 $sfConfig = new SalesforceConfig();
 $sfClient = new \Crunch\Salesforce\Client($sfConfig, new GuzzleHttp\Client());
 
@@ -54,7 +52,6 @@ $sfClient = new \Crunch\Salesforce\Client($sfConfig, new GuzzleHttp\Client());
 Authentication happens via oauth2 and the login url can be generated using the `getLoginUrl` method, you should pass this your return url for the send stage of the oauth process.
 
 ```php
-
 $url = $sfClient->getLoginUrl('http://exmaple.com/sf-login');
 
 ```
@@ -64,7 +61,6 @@ You should redirect the user to this returned url, on completion they will be re
 The second stage of the authentication can then be completed.
 
 ```php
-
 $token = $sfClient->authorizeConfirm($_GET['code'], 'http://exmaple.com/sf-login');
 
 ```
@@ -73,7 +69,6 @@ The token returned from here is the raw data and can be passed to the access tok
 
 
 ```php
-
 $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
 $accessToken = $tokenGenerator->createFromSalesforceResponse($token);
 
@@ -85,7 +80,6 @@ This access token should be stored. A method to store this on the file system is
 The `LocalFileStore` object needs to be instantiated with access to the token generator and a config class which implements `\Crunch\Salesforce\TokenStore\LocalFileConfigInterface`
 
 ```php
-
 class SFLocalFileStoreConfig implements \Crunch\Salesforce\TokenStore\LocalFileConfigInterface {
 
     /**
@@ -104,7 +98,6 @@ class SFLocalFileStoreConfig implements \Crunch\Salesforce\TokenStore\LocalFileC
 The token store can then be created and used to save the access token to the local file system as well as fetching a previously saved token.
 
 ```php
-
 $tokenStore = new \Crunch\Salesforce\TokenStore\LocalFile(new \Crunch\Salesforce\AccessTokenGenerator, new SFLocalFileStoreConfig);
 
 //Save a token
@@ -119,7 +112,6 @@ $accessToken = $tokenStore->fetchAccessToken();
 The access token only lasts 1 hour before expiring so you should regularly check its status and refresh it accordingly.
 
 ```php
-
 $accessToken = $tokenStore->fetchAccessToken();
 
 if ($accessToken->needsRefresh()) {
@@ -138,7 +130,6 @@ if ($accessToken->needsRefresh()) {
 Before making a request you should instantiate the client as above and then assign the access token to it.
 
 ```php
-
 $sfConfig = new SalesforceConfig();
 $sfClient = new \Crunch\Salesforce\Client($sfConfig, new \GuzzleHttp\Client());
 
@@ -151,7 +142,6 @@ This is a powerful option for performing general queries against your salesforce
 Simply pass a valid query to the search method and the resulting data will be returned.
 
 ```php
-
 $data = $sfClient->search('SELECT Email, Name FROM Lead LIMIT 10');
 
 ```
@@ -160,7 +150,6 @@ $data = $sfClient->search('SELECT Email, Name FROM Lead LIMIT 10');
 If you know the id and type of a record you can fetch a set of fields from it.
 
 ```php
-
 $data = $sfClient->getRecord('Lead', '00WL0000008wVl1MDE', ['name', 'email', 'phone']);
 
 ```
@@ -170,7 +159,6 @@ The process for creating and updating records is very similar and can be perform
 The createRecord method will return the id of the newly created record.
 
 ```php
-
 $data = $sfClient->createRecord('Lead', ['email' => 'foo@example.com', 'Company' => 'New test', 'lastName' => 'John Doe']);
 
 $sfClient->updateRecord('Lead', '00WL0000008wVl1MDE', ['lastName' => 'Steve Jobs']);
@@ -181,7 +169,6 @@ $sfClient->updateRecord('Lead', '00WL0000008wVl1MDE', ['lastName' => 'Steve Jobs
 Records can be deleted based on their id and type.
 
 ```php
-
 $sfClient->deleteRecord('Lead', '00WL0000008wVl1MDE');
 
 ```
@@ -190,7 +177,6 @@ $sfClient->deleteRecord('Lead', '00WL0000008wVl1MDE');
 If something goes wrong guzzle will throw an exception, if this happens you should take a look at the response body for further information and correct the issue.
 
 ```php
-
 try {
 
 	$sfClient->updateRecord('Lead', '00WL0000008wVl1MDE', ['lastName' => 'Steve Jobs']);
