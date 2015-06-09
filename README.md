@@ -41,20 +41,8 @@ $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
 $accessToken = $tokenGenerator->createFromJson($_SESSION['accessToken']);
 $sfClient->setAccessToken($accessToken);
 
-try {
-    
-    $results = $sfClient->search('SELECT Name, Email FROM Lead Limit 10');
-    print_r($results);
-
-} catch (\Crunch\Salesforce\Exceptions\RequestException $e) {
-
-    echo $e->getRequestBody();
-
-} catch (\Crunch\Salesforce\Exceptions\AuthenticationException $e) {
-
-    echo $e->getErrorCode();
-    
-}
+$results = $sfClient->search('SELECT Name, Email FROM Lead Limit 10');
+print_r($results);
 
 ```
 
@@ -241,4 +229,20 @@ you can get the exact details using the methods `getMessage` and `getErrorCode`.
 All other errors will be `Crunch\Salesforce\Exceptions\RequestException`, the error response can be fetched using 
 the method `getRequestBody`.
 
-Take a look at the getting started example at the top to see both of these errors being captured.
+```php
+try {
+    
+    $results = $sfClient->search('SELECT Name, Email FROM Lead Limit 10');
+    print_r($results);
+
+} catch (\Crunch\Salesforce\Exceptions\RequestException $e) {
+
+    echo $e->getRequestBody();
+
+} catch (\Crunch\Salesforce\Exceptions\AuthenticationException $e) {
+
+    echo $e->getErrorCode();
+    
+}
+
+```
