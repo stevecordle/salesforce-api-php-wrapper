@@ -1,0 +1,28 @@
+<?php namespace Crunch\Salesforce\Exceptions;
+
+class AuthenticationException extends \Exception {
+
+    /**
+     * @var string
+     */
+    private $errorCode;
+
+    /**
+     * @param string $errorCode
+     * @param string $message
+     */
+    function __construct($errorCode, $message)
+    {
+        $this->errorCode = $errorCode;
+
+        parent::__construct($message);
+    }
+
+    /**
+     * @return string
+     */
+    public function getErrorCode()
+    {
+        return $this->errorCode;
+    }
+}

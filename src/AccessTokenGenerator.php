@@ -59,7 +59,7 @@ class AccessTokenGenerator {
 
         $dateIssued = Carbon::createFromTimestamp((int)($salesforceToken['issued_at'] / 1000));
 
-        $dateExpires = $dateIssued->copy()->addHour();
+        $dateExpires = $dateIssued->copy()->addHour()->subMinutes(5);
 
         $scope = explode(' ', $salesforceToken['scope']);
 

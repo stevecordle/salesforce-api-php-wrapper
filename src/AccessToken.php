@@ -88,7 +88,7 @@ class AccessToken
     {
         $this->dateIssued = Carbon::createFromTimestamp((int)($salesforceToken['issued_at'] / 1000));
 
-        $this->dateExpires = $this->dateIssued->copy()->addHour();
+        $this->dateExpires = $this->dateIssued->copy()->addHour()->subMinutes(5);
 
         $this->signature = $salesforceToken['signature'];
 

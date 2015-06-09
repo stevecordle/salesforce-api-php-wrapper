@@ -4,8 +4,67 @@ A simple library for interacting with the Salesforce REST API.
 
 Methods for setting up a connection, requesting an access token, refreshing the access token, saving the access token, and making calls against the API.
 
+
+##Getting started
+
+__Creating an oauth token:__
+You need to fetch an access token for a user, all followup requests will be performed against this user.
+
+```php
+$sfClient = \Crunch\Salesforce\Client::create('https://test.salesforce.com/', 'clientid', 'clientsecret');
+
+if ( ! isset($_GET['code'])) {
+
+    $url = $sfClient->getLoginUrl('http://example.com/sf-login');
+    header('Location: '.$url);
+    exit();
+
+} else {
+
+    $token = $sfClient->authorizeConfirm($_GET['code'], 'http://example.com/sf-login');
+    $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+    $accessToken = $tokenGenerator->createFromSalesforceResponse($token);
+    
+    $_SESSION['accessToken'] = $accessToken->toJson();
+
+}
+
+```
+
+
+__Performing an action:__
+Once you have an access token you can perform requests against the API.
+
+```php
+$sfClient = \Crunch\Salesforce\Client::create('https://test.salesforce.com/', 'clientid', 'clientsecret');
+$tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+$accessToken = $tokenGenerator->createFromJson($_SESSION['accessToken']);
+$sfClient->setAccessToken($accessToken);
+
+try {
+    
+    $results = $sfClient->search('SELECT Name, Email FROM Lead Limit 10');
+    print_r($results);
+
+} catch (\Crunch\Salesforce\Exceptions\RequestException $e) {
+
+    echo $e->getRequestBody();
+
+} catch (\Crunch\Salesforce\Exceptions\AuthenticationException $e) {
+
+    echo $e->getErrorCode();
+    
+}
+
+```
+
+The token will expire after an hour so you should make sure your checking the expiry time and refreshing accordinly
+
 ##Setting up the Salesforce client
 
+The client can be configured in two ways, you can call the static create method above passing in the login url and oauth 
+details or you can use a configuration object as in the example below.
+ 
 The configuration data for the client is passed in through a config file which must implement `\Crunch\Salesforce\ClientConfigInterface`
 
 For example
@@ -40,7 +99,7 @@ class SalesforceConfig implements \Crunch\Salesforce\ClientConfigInterface {
 
 ```
 
-The Salesforce client can then be instantiated with the config object and an instance of Guzzle client.
+The Salesforce client can then be instantiated with the config object and an instance of the Guzzle v4 client.
 
 ```php
 $sfConfig = new SalesforceConfig();
@@ -76,6 +135,8 @@ $accessToken = $tokenGenerator->createFromSalesforceResponse($token);
 
 ###Storing the access token
 This access token should be stored. A method to store this on the file system is provided but this isn't required.
+
+The example above uses the php session to achieve the same result.
 
 The `LocalFileStore` object needs to be instantiated with access to the token generator and a config class which implements `\Crunch\Salesforce\TokenStore\LocalFileConfigInterface`
 
@@ -116,9 +177,7 @@ $accessToken = $tokenStore->fetchAccessToken();
 
 if ($accessToken->needsRefresh()) {
 
-	$update = $sfClient->refreshToken($token);
-	
-    $accessToken->updateFromSalesforceRefresh($update);
+	$accessToken = $sfClient->refreshToken();
 
     $tokenStore->saveAccessToken($accessToken);
 }
@@ -174,17 +233,12 @@ $sfClient->deleteRecord('Lead', '00WL0000008wVl1MDE');
 ```
 
 ##Errors
-If something goes wrong guzzle will throw an exception, if this happens you should take a look at the response body for further information and correct the issue.
+If something goes wrong the library will throw an exception. 
 
-```php
-try {
+If its an authentication exception such as an expired token this will be as `Crunch\Salesforce\Exceptions\AuthenticationException`,
+you can get the exact details using the methods `getMessage` and `getErrorCode`.
 
-	$sfClient->updateRecord('Lead', '00WL0000008wVl1MDE', ['lastName' => 'Steve Jobs']);
+All other errors will be `Crunch\Salesforce\Exceptions\RequestException`, the error response can be fetched using 
+the method `getRequestBody`.
 
-} catch (\GuzzleHttp\Exception\RequestException $e) {
-
-    $e->getResponse()->getBody(); //Salesforce error message
-    
-}
-
-```
+Take a look at the getting started example at the top to see both of these errors being captured.

@@ -1,5 +1,9 @@
 <?php namespace Crunch\Salesforce;
 
+use Crunch\Salesforce\Exceptions\RequestException;
+use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
+use Crunch\Salesforce\Exceptions\AuthenticationException;
+
 class Client
 {
     /**
@@ -34,15 +38,46 @@ class Client
 
 
     /**
-     * @param ClientConfigInterface $clientConfigInterface
-     * @param \GuzzleHttp\Client    $guzzleClient
+     * Create a sf client using a client config object or an array of params
+     *
+     * @param ClientConfigInterface|array $clientConfig
+     * @param \GuzzleHttp\Client          $guzzleClient
+     * @throws \Exception
      */
-    function __construct(ClientConfigInterface $clientConfigInterface, \GuzzleHttp\Client $guzzleClient)
+    public function __construct($clientConfig = null, \GuzzleHttp\Client $guzzleClient)
     {
-        $this->salesforceLoginUrl = $clientConfigInterface->getLoginUrl();
-        $this->clientId           = $clientConfigInterface->getClientId();
-        $this->clientSecret       = $clientConfigInterface->getClientSecret();
-        $this->guzzleClient       = $guzzleClient;
+        if ($clientConfig instanceof ClientConfigInterface) {
+
+            $this->salesforceLoginUrl = $clientConfig->getLoginUrl();
+            $this->clientId           = $clientConfig->getClientId();
+            $this->clientSecret       = $clientConfig->getClientSecret();
+
+        } elseif (is_array($clientConfig)) {
+
+            $this->salesforceLoginUrl = $clientConfig[0];
+            $this->clientId           = $clientConfig[1];
+            $this->clientSecret       = $clientConfig[2];
+
+        } else {
+
+            throw new \Exception("Invalid configuration data");
+
+        }
+
+        $this->guzzleClient           = $guzzleClient;
+    }
+
+    /**
+     * Create an instance of the salesforce client using the passed in config data
+     *
+     * @param $salesforceLoginUrl
+     * @param $clientId
+     * @param $clientSecret
+     * @return Client
+     */
+    public static function create($salesforceLoginUrl, $clientId, $clientSecret)
+    {
+        return new self([$salesforceLoginUrl, $clientId, $clientSecret], new \GuzzleHttp\Client);
     }
 
     /**
@@ -56,7 +91,7 @@ class Client
     public function getRecord($objectType, $sfId, array $fields)
     {
         $url      = $this->baseUrl . '/services/data/v20.0/sobjects/' . $objectType . '/' . $sfId . '?fields=' . implode(',', $fields);
-        $response = $this->guzzleClient->get($url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
+        $response = $this->makeRequest('get', $url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
 
         return json_decode($response->getBody(), true);
     }
@@ -77,7 +112,7 @@ class Client
         } else {
             $url = $this->baseUrl . '/services/data/v24.0/query/?q=' . urlencode($query);
         }
-        $response = $this->guzzleClient->get($url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
+        $response = $this->makeRequest('get', $url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
         $data     = json_decode($response->getBody(), true);
 
         $results = $data['records'];
@@ -107,7 +142,7 @@ class Client
     {
         $url = $this->baseUrl . '/services/data/v20.0/sobjects/' . $object . '/' . $id;
 
-        $this->guzzleClient->patch($url, [
+        $this->makeRequest('patch', $url, [
             'headers' => ['Content-Type' => 'application/json', 'Authorization' => $this->getAuthHeader()],
             'body'    => json_encode($data)
         ]);
@@ -127,7 +162,7 @@ class Client
     {
         $url = $this->baseUrl . '/services/data/v20.0/sobjects/' . $object . '/';
 
-        $response     = $this->guzzleClient->post($url, [
+        $response     = $this->makeRequest('post', $url, [
             'headers' => ['Content-Type' => 'application/json', 'Authorization' => $this->getAuthHeader()],
             'body'    => json_encode($data)
         ]);
@@ -148,7 +183,7 @@ class Client
     {
         $url = $this->baseUrl . '/services/data/v20.0/sobjects/' . $object . '/' . $id;
 
-        $this->guzzleClient->delete($url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
+        $this->makeRequest('delete', $url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
 
         return true;
     }
@@ -173,7 +208,7 @@ class Client
             'redirect_uri'  => $redirect_url
         ];
 
-        $response = $this->guzzleClient->post($url, ['form_params' => $post_data]);
+        $response = $this->makeRequest('post', $url, ['form_params' => $post_data]);
 
         return json_decode($response->getBody(), true);
     }
@@ -199,11 +234,10 @@ class Client
     /**
      * Refresh an existing access token
      *
-     * @param AccessToken $accessToken
-     * @return array|mixed
+     * @return AccessToken
      * @throws \Exception
      */
-    public function refreshToken(AccessToken $accessToken)
+    public function refreshToken()
     {
         $url = $this->salesforceLoginUrl . 'services/oauth2/token';
 
@@ -211,12 +245,15 @@ class Client
             'grant_type'    => 'refresh_token',
             'client_id'     => $this->clientId,
             'client_secret' => $this->clientSecret,
-            'refresh_token' => $accessToken->getRefreshToken()
+            'refresh_token' => $this->accessToken->getRefreshToken()
         ];
 
-        $response = $this->guzzleClient->post($url, ['form_params' => $post_data]);
+        $response = $this->makeRequest('post', $url, ['form_params' => $post_data]);
 
-        return json_decode($response->getBody(), true);
+        $update = json_decode($response->getBody(), true);
+        $this->accessToken->updateFromSalesforceRefresh($update);
+
+        return $this->accessToken;
     }
 
     /**
@@ -226,6 +263,23 @@ class Client
     {
         $this->accessToken = $accessToken;
         $this->baseUrl     = $accessToken->getApiUrl();
+    }
+
+    private function makeRequest($method, $url, $data)
+    {
+        try {
+            $response = $this->guzzleClient->$method($url, $data);
+            return $response;
+        } catch (GuzzleRequestException $e) {
+
+            //If its an auth error convert to an auth exception
+            if ($e->getResponse()->getStatusCode() == 401) {
+                $error = json_decode($e->getResponse()->getBody(), true);
+                throw new AuthenticationException($error[0]['errorCode'], $error[0]['message']);
+            }
+            throw new RequestException($e->getMessage(), (string)$e->getResponse()->getBody());
+        }
+
     }
 
     /**
