@@ -50,7 +50,7 @@ class Client
         $this->clientId           = $clientConfig->getClientId();
         $this->clientSecret       = $clientConfig->getClientSecret();
 
-        $this->guzzleClient           = $guzzleClient;
+        $this->guzzleClient = $guzzleClient;
     }
 
     /**
@@ -251,10 +251,19 @@ class Client
         $this->baseUrl     = $accessToken->getApiUrl();
     }
 
+    /**
+     * @param string $method
+     * @param string $url
+     * @param array  $data
+     * @return mixed
+     * @throws AuthenticationException
+     * @throws RequestException
+     */
     private function makeRequest($method, $url, $data)
     {
         try {
             $response = $this->guzzleClient->$method($url, $data);
+
             return $response;
         } catch (GuzzleRequestException $e) {
 
