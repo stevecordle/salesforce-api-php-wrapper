@@ -51,7 +51,8 @@ The token will expire after an hour so you should make sure your checking the ex
 ##Setting up the Salesforce client
 
 The client can be configured in two ways, you can call the static create method above passing in the login url and oauth 
-details or you can use a configuration object as in the example below.
+details or you can use a configuration object as in the example below. This is useful when you need to resolve 
+the client out of an ioc container.
  
 The configuration data for the client is passed in through a config file which must implement `\Crunch\Salesforce\ClientConfigInterface`
 
@@ -86,6 +87,9 @@ class SalesforceConfig implements \Crunch\Salesforce\ClientConfigInterface {
 }
 
 ```
+
+A config class is provided and can be used if needed. `\Crunch\Salesforce\ClientConfig`
+
 
 The Salesforce client can then be instantiated with the config object and an instance of the Guzzle v4 client.
 

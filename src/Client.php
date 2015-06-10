@@ -40,29 +40,15 @@ class Client
     /**
      * Create a sf client using a client config object or an array of params
      *
-     * @param ClientConfigInterface|array $clientConfig
-     * @param \GuzzleHttp\Client          $guzzleClient
+     * @param ClientConfigInterface $clientConfig
+     * @param \GuzzleHttp\Client    $guzzleClient
      * @throws \Exception
      */
-    public function __construct($clientConfig = null, \GuzzleHttp\Client $guzzleClient)
+    public function __construct(ClientConfigInterface $clientConfig, \GuzzleHttp\Client $guzzleClient)
     {
-        if ($clientConfig instanceof ClientConfigInterface) {
-
-            $this->salesforceLoginUrl = $clientConfig->getLoginUrl();
-            $this->clientId           = $clientConfig->getClientId();
-            $this->clientSecret       = $clientConfig->getClientSecret();
-
-        } elseif (is_array($clientConfig)) {
-
-            $this->salesforceLoginUrl = $clientConfig[0];
-            $this->clientId           = $clientConfig[1];
-            $this->clientSecret       = $clientConfig[2];
-
-        } else {
-
-            throw new \Exception("Invalid configuration data");
-
-        }
+        $this->salesforceLoginUrl = $clientConfig->getLoginUrl();
+        $this->clientId           = $clientConfig->getClientId();
+        $this->clientSecret       = $clientConfig->getClientSecret();
 
         $this->guzzleClient           = $guzzleClient;
     }
@@ -77,7 +63,7 @@ class Client
      */
     public static function create($salesforceLoginUrl, $clientId, $clientSecret)
     {
-        return new self([$salesforceLoginUrl, $clientId, $clientSecret], new \GuzzleHttp\Client);
+        return new self(new ClientConfig($salesforceLoginUrl, $clientId, $clientSecret), new \GuzzleHttp\Client);
     }
 
     /**
