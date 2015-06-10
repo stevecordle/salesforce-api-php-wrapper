@@ -63,7 +63,7 @@ class AccessTokenGeneratorTest extends TestCase
 
         $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateIssued(), 'Token issued date not a carbon instance');
         $this->assertEquals($time, $token->getDateIssued()->timestamp, 'Token issue timestamp doesnt match');
-        $this->assertEquals($time + (60*60), $token->getDateExpires()->timestamp, 'Token expiry time not 1 hour after creation');
+        $this->assertEquals($time + (60*55), $token->getDateExpires()->timestamp, 'Token expiry time not 55 minutes after creation');
     }
 
     /** @test */
