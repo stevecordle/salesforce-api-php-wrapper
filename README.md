@@ -7,6 +7,12 @@ Methods for setting up a connection, requesting an access token, refreshing the 
 
 ##Getting started
 
+__Installation:__
+The package should be installed through composer and locked to a major version
+```
+composer require crunch-accounting/salesforce-api:~1.0
+```
+
 __Creating an oauth token:__
 You need to fetch an access token for a user, all followup requests will be performed against this user.
 
