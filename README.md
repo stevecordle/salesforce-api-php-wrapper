@@ -1,3 +1,6 @@
+[![Current Version](https://img.shields.io/packagist/v/crunch-accounting/salesforce-api.svg?style=flat-square)](https://packagist.org/packages/crunch-accounting/salesforce-api)
+[![License](https://img.shields.io/packagist/l/crunch-accounting/salesforce-api.svg?style=flat-square)](https://packagist.org/packages/crunch-accounting/salesforce-api)
+
 # Salesforce PHP Library
 
 A simple library for interacting with the Salesforce REST API.
