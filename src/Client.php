@@ -86,14 +86,14 @@ class Client
      * Execute an SOQL query and return the result set
      * This will loop through large result sets collecting all the data so the query should be limited
      *
-     * @param null $query
-     * @param string $next_url
+     * @param string|null $query
+     * @param string|null $next_url
      * @return array
      * @throws \Exception
      */
     public function search($query = null, $next_url = null)
     {
-        if ($next_url) {
+        if ( ! empty($next_url)) {
             $url = $this->baseUrl . '/' . $next_url;
         } else {
             $url = $this->baseUrl . '/services/data/v24.0/query/?q=' . urlencode($query);
