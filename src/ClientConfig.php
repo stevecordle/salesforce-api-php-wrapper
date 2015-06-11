@@ -15,7 +15,7 @@ class ClientConfig implements ClientConfigInterface {
      */
     private $clientSecret;
 
-    function __construct($loginUrl, $clientId, $clientSecret)
+    public function __construct($loginUrl, $clientId, $clientSecret)
     {
         $this->loginUrl = $loginUrl;
         $this->clientId = $clientId;

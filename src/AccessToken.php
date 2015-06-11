@@ -61,7 +61,7 @@ class AccessToken
      * @param string         $accessToken
      * @param string         $apiUrl
      */
-    function __construct(
+    public function __construct(
         $id,
         $dateIssued,
         $dateExpires,

@@ -87,11 +87,11 @@ class Client
      * This will loop through large result sets collecting all the data so the query should be limited
      *
      * @param null $query
-     * @param bool $next_url
+     * @param string $next_url
      * @return array
      * @throws \Exception
      */
-    public function search($query = null, $next_url = false)
+    public function search($query = null, $next_url = null)
     {
         if ($next_url) {
             $url = $this->baseUrl . '/' . $next_url;
@@ -104,12 +104,9 @@ class Client
         $results = $data['records'];
         if ( ! $data['done']) {
             $more_results = $this->search(null, substr($data['nextRecordsUrl'], 1));
-            if ($more_results) {
+            if ( ! empty($more_results)) {
                 $results = array_merge($results, $more_results);
             }
-            //$data['totalSize'];		//Total records
-            //count($data['records']);	//Number returned
-            //$data['nextRecordsUrl'];	//more records url
         }
 
         return $results;

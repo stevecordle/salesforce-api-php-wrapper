@@ -11,7 +11,7 @@ class AuthenticationException extends \Exception {
      * @param string $errorCode
      * @param string $message
      */
-    function __construct($errorCode, $message)
+    public function __construct($errorCode, $message)
     {
         $this->errorCode = $errorCode;
 

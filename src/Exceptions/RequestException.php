@@ -16,7 +16,7 @@ class RequestException extends \Exception {
      * @param string $message
      * @param        $requestBody
      */
-    function __construct($message, $requestBody)
+    public function __construct($message, $requestBody)
     {
         $this->requestBody = $requestBody;
         $error = json_decode($requestBody, true);
