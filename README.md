@@ -230,8 +230,8 @@ If something goes wrong the library will throw an exception.
 If its an authentication exception such as an expired token this will be as `Crunch\Salesforce\Exceptions\AuthenticationException`,
 you can get the exact details using the methods `getMessage` and `getErrorCode`.
 
-All other errors will be `Crunch\Salesforce\Exceptions\RequestException`, the error response can be fetched using 
-the method `getRequestBody`.
+All other errors will be `Crunch\Salesforce\Exceptions\RequestException`, the salesforce error will be in the message
+
 
 ```php
 try {
@@ -241,7 +241,8 @@ try {
 
 } catch (\Crunch\Salesforce\Exceptions\RequestException $e) {
 
-    echo $e->getRequestBody();
+    echo $e->getMessage();
+    echo $e->getErrorCode();
 
 } catch (\Crunch\Salesforce\Exceptions\AuthenticationException $e) {
 
