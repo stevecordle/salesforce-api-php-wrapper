@@ -1,10 +1,10 @@
 {
-    "name": "crunch-accounting/salesforce",
+    "name": "crunch-accounting/salesforce-api",
     "license": "MIT",
     "authors": [
         {
             "name": "Arthur Guy",
-            "email": "arthur@assys.net"
+            "email": "arthur.guy@crunch.co.uk"
         }
     ],
     "require": {
