@@ -1,7 +1,8 @@
 {
   "name": "crunch-accounting/salesforce-api",
-  "description": "A library for interacting with the Salesforce REST API",
-  "keywords": ["salesforce", "rest", "api", "sdk"],
+  "description": "A library for interacting with the Salesforce REST API and managing the OAuth flow",
+  "keywords": ["salesforce", "rest", "api", "oauth2"],
+  "homepage": "https://github.com/crunch-accounting/salesforce-api-php-wrapper",
   "license": "MIT",
   "authors": [
     {
