@@ -1,5 +1,7 @@
 {
   "name": "crunch-accounting/salesforce-api",
+  "description": "A library for interacting with the Salesforce REST API",
+  "keywords": ["salesforce", "rest", "api", "sdk"],
   "license": "MIT",
   "authors": [
     {
