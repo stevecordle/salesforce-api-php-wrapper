@@ -1,6 +1,6 @@
 [![Current Version](https://img.shields.io/packagist/v/crunch-accounting/salesforce-api.svg?style=flat-square)](https://packagist.org/packages/crunch-accounting/salesforce-api)
 [![License](https://img.shields.io/packagist/l/crunch-accounting/salesforce-api.svg?style=flat-square)](https://packagist.org/packages/crunch-accounting/salesforce-api)
-[![Scrutinizer](https://img.shields.io/scrutinizer/g/crunch-accounting/salesforce-api-php-wrapper.svg?style=flat-square)](https://scrutinizer-ci.com/g/crunch-accounting/salesforce-api-php-wrapper/)
+[![Travis](https://img.shields.io/travis/crunch-accounting/salesforce-api-php-wrapper.svg?style=flat-square)](https://travis-ci.org/crunch-accounting/salesforce-api-php-wrapper)
 
 # Salesforce PHP Library
 
