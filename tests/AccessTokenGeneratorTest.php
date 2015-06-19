@@ -45,6 +45,21 @@ class AccessTokenGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function token_gets_generated_from_limited_sf_response()
+    {
+        $responseData = [
+            'id' => '',
+            'issued_at' => '',
+            'access_token' => '',
+            'instance_url' => '',
+        ];
+        $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+        $token = $tokenGenerator->createFromSalesforceResponse($responseData);
+
+        $this->assertInstanceOf(\Crunch\Salesforce\AccessToken::class, $token, 'Token generated not an instance of AccessToken');
+    }
+
+    /** @test */
     public function token_date_generated_from_sf_response()
     {
         $time = time();
