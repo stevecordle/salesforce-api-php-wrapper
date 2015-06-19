@@ -57,7 +57,7 @@ print_r($results);
 
 ```
 
-The token will expire after an hour so you should make sure your checking the expiry time and refreshing accordinly
+The token will expire after an hour so you should make sure you're checking the expiry time and refreshing accordingly.
 
 ##Setting up the Salesforce client
 
