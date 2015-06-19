@@ -190,6 +190,34 @@ class ClientTest extends TestCase {
         $this->assertNotFalse(strpos($url, 'redirectUrl'));
     }
 
+    /**
+     * @test
+     * @expectedException        Crunch\Salesforce\Exceptions\RequestException
+     * @expectedExceptionMessage expired authorization code
+     */
+    public function client_can_parse_auth_flow_error()
+    {
+        //Error Response
+        $errorResponse = m::mock('Psr\Http\Message\ResponseInterface');
+        $errorResponse->shouldReceive('getBody')->once()->andReturn('{"error_description":"expired authorization code","error":"invalid_grant"}');
+        $errorResponse->shouldReceive('getStatusCode')->once()->andReturn(400);
+
+        //Make guzzle throw an exception with the above message
+        $guzzle = m::mock('\GuzzleHttp\Client');
+        $guzzleException = m::mock('GuzzleHttp\Exception\RequestException');
+        $guzzleException->shouldReceive('getResponse')->andReturn($errorResponse);
+
+        //Make sure the url contains the passed in data
+        $guzzle->shouldReceive('post')->with(stringContainsInOrder('services/oauth2/token'), \Mockery::type('array'))->once()->andThrow($guzzleException);
+
+        //Setup the client
+        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
+        $sfClient->setAccessToken($this->getAccessTokenMock());
+
+        //Try the auth flow - this should generate an exception
+        $sfClient->authorizeConfirm('authCode', 'redirectUrl');
+    }
+
 
     /**
      * Mock the client config interface

@@ -1,6 +1,7 @@
 <?php namespace Crunch\Salesforce\Exceptions;
 
-class RequestException extends \Exception {
+class RequestException extends \Exception
+{
 
     /**
      * @var string
@@ -14,14 +15,25 @@ class RequestException extends \Exception {
 
     /**
      * @param string $message
-     * @param        $requestBody
+     * @param string $requestBody
      */
     public function __construct($message, $requestBody)
     {
         $this->requestBody = $requestBody;
-        $error = json_decode($requestBody, true);
-        $this->errorCode = $error[0]['errorCode'];
-        parent::__construct($error[0]['message']);
+        $error             = json_decode($requestBody, true);
+
+        //Errors generated during the auth stage are different to those generated during normal requests
+        if (isset($error['error']) && isset($error['error_description'])) {
+
+            $this->errorCode = $error['error'];
+            parent::__construct($error['error_description']);
+
+        } else {
+
+            $this->errorCode = $error['errorCode'];
+            parent::__construct($error['message']);
+
+        }
     }
 
     /**
