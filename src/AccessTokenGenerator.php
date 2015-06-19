@@ -55,19 +55,20 @@ class AccessTokenGenerator {
      */
     public function createFromSalesforceResponse(array $salesforceToken)
     {
-        $id = $salesforceToken['id'];
 
         $dateIssued = Carbon::createFromTimestamp((int)($salesforceToken['issued_at'] / 1000));
 
         $dateExpires = $dateIssued->copy()->addHour()->subMinutes(5);
 
-        $scope = explode(' ', $salesforceToken['scope']);
+        $id = $this->getKeyIfSet($salesforceToken, 'id');
 
-        $tokenType = $salesforceToken['token_type'];
+        $scope = explode(' ', $this->getKeyIfSet($salesforceToken, 'scope'));
 
-        $refreshToken = $salesforceToken['refresh_token'];
+        $refreshToken = $this->getKeyIfSet($salesforceToken, 'refresh_token');
 
-        $signature = $salesforceToken['signature'];
+        $signature = $this->getKeyIfSet($salesforceToken, 'signature');
+
+        $tokenType = $this->getKeyIfSet($salesforceToken, 'token_type');
 
         $accessToken = $salesforceToken['access_token'];
 
@@ -86,5 +87,18 @@ class AccessTokenGenerator {
         );
 
         return $token;
+    }
+
+    /**
+     * @param array $array
+     * @param mixed $key
+     * @return null
+     */
+    private function getKeyIfSet($array, $key)
+    {
+        if (isset($array[$key])) {
+            return $array[$key];
+        }
+        return null;
     }
 }
