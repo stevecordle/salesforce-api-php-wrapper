@@ -28,6 +28,11 @@ class RequestException extends \Exception
             $this->errorCode = $error['error'];
             parent::__construct($error['error_description']);
 
+        } else if (isset($error[0]['message'])) {
+
+            $this->errorCode = $error[0]['errorCode'];
+            parent::__construct($error[0]['message']);
+
         } else {
 
             $this->errorCode = $error['errorCode'];
