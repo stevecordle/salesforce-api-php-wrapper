@@ -263,6 +263,10 @@ class Client
 
             return $response;
         } catch (GuzzleRequestException $e) {
+            
+            if ($e->getResponse() === null) {
+        		throw $e;
+        	}
 
             //If its an auth error convert to an auth exception
             if ($e->getResponse()->getStatusCode() == 401) {
@@ -279,6 +283,10 @@ class Client
      */
     private function getAuthHeader()
     {
+        if ($this->accessToken === null) {
+    		throw new AuthenticationException(0, "Access token not set");
+    	}
+    	
         return 'Bearer ' . $this->accessToken->getAccessToken();
     }
 
