@@ -1,8 +1,10 @@
 <?php namespace Crunch\Salesforce;
 
 use Crunch\Salesforce\Exceptions\RequestException;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use Crunch\Salesforce\Exceptions\AuthenticationException;
+use GuzzleHttp\Client as HttpClient;
 
 class Client
 {
@@ -22,6 +24,11 @@ class Client
     protected $clientSecret;
 
     /**
+     * @var string
+     */
+    protected $apiVersion;
+
+    /**
      * @var AccessToken
      */
     private $accessToken;
@@ -32,7 +39,7 @@ class Client
     private $baseUrl;
 
     /**
-     * @var \GuzzleHttp\Client
+     * @var ClientInterface
      */
     private $guzzleClient;
 
@@ -41,14 +48,15 @@ class Client
      * Create a sf client using a client config object or an array of params
      *
      * @param ClientConfigInterface $clientConfig
-     * @param \GuzzleHttp\Client    $guzzleClient
+     * @param ClientInterface       $guzzleClient
      * @throws \Exception
      */
-    public function __construct(ClientConfigInterface $clientConfig, \GuzzleHttp\Client $guzzleClient)
+    public function __construct(ClientConfigInterface $clientConfig, ClientInterface $guzzleClient)
     {
         $this->salesforceLoginUrl = $clientConfig->getLoginUrl();
         $this->clientId           = $clientConfig->getClientId();
         $this->clientSecret       = $clientConfig->getClientSecret();
+        $this->apiVersion         = $clientConfig->getApiVersion();
 
         $this->guzzleClient = $guzzleClient;
     }
@@ -59,11 +67,16 @@ class Client
      * @param $salesforceLoginUrl
      * @param $clientId
      * @param $clientSecret
+     * @param $apiVersion
      * @return Client
+     * @throws \Exception
      */
-    public static function create($salesforceLoginUrl, $clientId, $clientSecret)
+    public static function create($salesforceLoginUrl, $clientId, $clientSecret, $apiVersion)
     {
-        return new self(new ClientConfig($salesforceLoginUrl, $clientId, $clientSecret), new \GuzzleHttp\Client);
+        return new self(
+            new ClientConfig($salesforceLoginUrl, $clientId, $clientSecret, $apiVersion),
+            new HttpClient()
+        );
     }
 
     /**
@@ -73,10 +86,12 @@ class Client
      * @param string $sfId
      * @param array  $fields
      * @return string
+     * @throws AuthenticationException
+     * @throws RequestException
      */
     public function getRecord($objectType, $sfId, array $fields)
     {
-        $url      = $this->baseUrl . '/services/data/v20.0/sobjects/' . $objectType . '/' . $sfId . '?fields=' . implode(',', $fields);
+        $url      = $this->baseUrl . '/services/data/'.$this->apiVersion.'/sobjects/' . $objectType . '/' . $sfId . '?fields=' . implode(',', $fields);
         $response = $this->makeRequest('get', $url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
 
         return json_decode($response->getBody(), true);
@@ -96,7 +111,7 @@ class Client
         if ( ! empty($next_url)) {
             $url = $this->baseUrl . '/' . $next_url;
         } else {
-            $url = $this->baseUrl . '/services/data/v24.0/query/?q=' . urlencode($query);
+            $url = $this->baseUrl . '/services/data/'.$this->apiVersion.'/query/?q=' . urlencode($query);
         }
         $response = $this->makeRequest('get', $url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
         $data     = json_decode($response->getBody(), true);
@@ -123,7 +138,7 @@ class Client
      */
     public function updateRecord($object, $id, array $data)
     {
-        $url = $this->baseUrl . '/services/data/v20.0/sobjects/' . $object . '/' . $id;
+        $url = $this->baseUrl . '/services/data/'.$this->apiVersion.'/sobjects/' . $object . '/' . $id;
 
         $this->makeRequest('patch', $url, [
             'headers' => ['Content-Type' => 'application/json', 'Authorization' => $this->getAuthHeader()],
@@ -143,7 +158,7 @@ class Client
      */
     public function createRecord($object, $data)
     {
-        $url = $this->baseUrl . '/services/data/v20.0/sobjects/' . $object . '/';
+        $url = $this->baseUrl . '/services/data/'.$this->apiVersion.'/sobjects/' . $object . '/';
 
         $response     = $this->makeRequest('post', $url, [
             'headers' => ['Content-Type' => 'application/json', 'Authorization' => $this->getAuthHeader()],
@@ -164,7 +179,7 @@ class Client
      */
     public function deleteRecord($object, $id)
     {
-        $url = $this->baseUrl . '/services/data/v20.0/sobjects/' . $object . '/' . $id;
+        $url = $this->baseUrl . '/services/data/'.$this->apiVersion.'/sobjects/' . $object . '/' . $id;
 
         $this->makeRequest('delete', $url, ['headers' => ['Authorization' => $this->getAuthHeader()]]);
 
@@ -181,7 +196,7 @@ class Client
      */
     public function authorizeConfirm($code, $redirect_url)
     {
-        $url = $this->salesforceLoginUrl . 'services/oauth2/token';
+        $url = $this->salesforceLoginUrl . '/services/oauth2/token';
 
         $post_data = [
             'grant_type'    => 'authorization_code',
@@ -194,6 +209,31 @@ class Client
         $response = $this->makeRequest('post', $url, ['form_params' => $post_data]);
 
         return json_decode($response->getBody(), true);
+    }
+
+    /**
+     * @param $username
+     * @param $password
+     * @param $securityToken
+     * @return mixed
+     * @throws AuthenticationException
+     * @throws RequestException
+     */
+    public function login($username, $password, $securityToken)
+    {
+        $url = $this->salesforceLoginUrl . '/services/oauth2/token';
+
+        $post_data = [
+            'grant_type'    => 'password',
+            'client_id'     => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'username'      => $username,
+            'password'      => $password.$securityToken
+        ];
+
+        $response = $this->makeRequest('post', $url, ['form_params' => $post_data]);
+
+        return json_decode((string) $response->getBody(), true);
     }
 
     /**
@@ -211,7 +251,7 @@ class Client
             'grant_type'    => 'authorization_code'
         ];
 
-        return $this->salesforceLoginUrl . 'services/oauth2/authorize?' . http_build_query($params);
+        return $this->salesforceLoginUrl . '/services/oauth2/authorize?' . http_build_query($params);
     }
 
     /**
@@ -222,7 +262,7 @@ class Client
      */
     public function refreshToken()
     {
-        $url = $this->salesforceLoginUrl . 'services/oauth2/token';
+        $url = $this->salesforceLoginUrl . '/services/oauth2/token';
 
         $post_data = [
             'grant_type'    => 'refresh_token',
@@ -280,11 +320,12 @@ class Client
 
     /**
      * @return string
+     * @throws AuthenticationException
      */
     private function getAuthHeader()
     {
         if ($this->accessToken === null) {
-    		throw new AuthenticationException(0, "Access token not set");
+    		throw new AuthenticationException(0, 'Access token not set');
     	}
     	
         return 'Bearer ' . $this->accessToken->getAccessToken();

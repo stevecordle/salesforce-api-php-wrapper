@@ -1,130 +1,198 @@
 <?php
 
-use \Mockery as m;
+namespace Crunch\Salesforce\Tests;
 
-class ClientTest extends TestCase {
+use Crunch\Salesforce\AccessToken;
+use Crunch\Salesforce\Client;
+use Crunch\Salesforce\ClientConfigInterface;
+use Crunch\Salesforce\Exceptions\RequestException;
+use GuzzleHttp\ClientInterface;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 
-
-
+/**
+ * @covers \Crunch\Salesforce\Client
+ */
+class ClientTest extends TestCase
+{
     /** @test */
-    public function client_can_be_instantiated()
+    public function testCanBeInstantiated()
     {
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        /** @var ClientInterface $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->getMockForAbstractClass();
 
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
 
-        $this->assertInstanceOf(\Crunch\Salesforce\Client::class, $sfClient);
+        self::assertInstanceOf(Client::class, $sfClient);
     }
 
     /** @test */
-    public function client_can_be_statically_instantiated()
+    public function testClient_can_be_statically_instantiated()
     {
-        $sfClient = \Crunch\Salesforce\Client::create('loginUrl', 'clientId', 'clientSecret');
+        $sfClient = Client::create('loginUrl', 'clientId', 'clientSecret', 'v44.0');
 
-        $this->assertInstanceOf(\Crunch\Salesforce\Client::class, $sfClient);
+        self::assertInstanceOf(Client::class, $sfClient);
     }
 
     /** @test */
-    public function client_will_get_record()
+    public function testWillGetRecord()
     {
+        $apiVersion = 'v44.0';
         $recordId = 'abc' . rand(1000, 9999999);
 
-        $response = m::mock('Psr\Http\Message\ResponseInterface');
-        $response->shouldReceive('getBody')->once()->andReturn(json_encode(['foo' => 'bar']));
+        $response = $this->getMockBuilder(ResponseInterface::class)->setMethods(['getBody'])->getMockForAbstractClass();
 
+        $response->expects(self::once())->method('getBody')->willReturn(json_encode(['foo' => 'bar']));
 
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        /** @var ClientInterface|MockObject $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->setMethods(['get'])->getMockForAbstractClass();
         //Make sure the url contains the passed in data
-        $guzzle->shouldReceive('get')->with(stringContainsInOrder('Test', $recordId, 'field1,field2') , \Mockery::type('array'))->once()->andReturn($response);
+        $guzzle
+            ->expects(self::once())
+            ->method('get')
+            ->with(
+                'http://api.example.com/services/data/'.$apiVersion.'/sobjects/Test/'.$recordId.'?fields=field1,field2',
+                ['headers' => ['Authorization' => 'Bearer 123456789abcdefghijk']]
+            )
+            ->willReturn($response);
 
-
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
-        $sfClient->setAccessToken($this->getAccessTokenMock());
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
+        $sfClient->setAccessToken($this->getAccessTokenMock($apiVersion));
 
 
         $data = $sfClient->getRecord('Test', $recordId, ['field1', 'field2']);
 
-        $this->assertEquals(['foo' => 'bar'], $data);
+        self::assertEquals(['foo' => 'bar'], $data);
     }
 
-    /** @test */
-    public function client_can_search()
+    public function testCanSearch()
     {
-        $response = m::mock('Psr\Http\Message\ResponseInterface');
-        $response->shouldReceive('getBody')->once()->andReturn(json_encode(['records' => [], 'done' => true]));
+        $query = 'SELECT Name FROM Lead LIMIT 10';
+        $apiVersion = 'v44.0';
+        $response = $this->getMockBuilder(ResponseInterface::class)->setMethods(['getBody'])->getMockForAbstractClass();
+        $response
+            ->expects(self::once())
+            ->method('getBody')
+            ->willReturn(json_encode(['records' => [], 'done' => true]));
 
-
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        /** @var ClientInterface|MockObject $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->setMethods(['get'])->getMockForAbstractClass();
         //Make sure the url contains the passed in data
-        $guzzle->shouldReceive('get')->with(stringContainsInOrder('SELECT+Name+FROM+Lead+LIMIT+10') , \Mockery::type('array'))->once()->andReturn($response);
+        $guzzle
+            ->expects(self::once())
+            ->method('get')
+            ->with(
+                'http://api.example.com/services/data/'.$apiVersion.'/query/?q='.urlencode($query),
+                ['headers' => ['Authorization' => 'Bearer 123456789abcdefghijk']]
+            )
+            ->willReturn($response);
+
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
+        $sfClient->setAccessToken($this->getAccessTokenMock($apiVersion));
 
 
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
-        $sfClient->setAccessToken($this->getAccessTokenMock());
-
-
-        $sfClient->search('SELECT Name FROM Lead LIMIT 10');
+        $sfClient->search($query);
     }
 
     /** @test */
-    public function client_can_create_record()
+    public function testCanCreateRecord()
     {
+        $apiVersion = 'v44.0';
         $recordId = 'abc' . rand(1000, 9999999);
+        $data = ['field1', 'field2'];
 
-        $response = m::mock('Psr\Http\Message\ResponseInterface');
-        $response->shouldReceive('getBody')->once()->andReturn(json_encode(['id' => $recordId]));
+        $response = $this->getMockBuilder(ResponseInterface::class)->setMethods(['getBody'])->getMockForAbstractClass();
+        $response->expects(self::once())->method('getBody')->willReturn(json_encode(['id' => $recordId]));
 
 
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        /** @var ClientInterface|MockObject $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->setMethods(['post'])->getMockForAbstractClass();
         //Make sure the url contains the passed in data
-        $guzzle->shouldReceive('post')->with(containsString('Test') , \Mockery::type('array'))->once()->andReturn($response);
+        $guzzle
+            ->expects(self::once())
+            ->method('post')
+            ->with(
+                'http://api.example.com/services/data/'.$apiVersion.'/sobjects/Test/',
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer 123456789abcdefghijk',
+                        'Content-Type' => 'application/json'
+                    ],
+                    'body' => json_encode($data)
+                ]
+            )
+            ->willReturn($response);
+
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
+        $sfClient->setAccessToken($this->getAccessTokenMock($apiVersion));
 
 
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
-        $sfClient->setAccessToken($this->getAccessTokenMock());
-
-
-        $data = $sfClient->createRecord('Test', ['field1', 'field2']);
+        $data = $sfClient->createRecord('Test', $data);
 
         $this->assertEquals($recordId, $data);
     }
 
-    /** @test */
-    public function client_can_update_record()
+    public function testCanUpdateRecord()
     {
+        $apiVersion = 'v44.0';
+        $data = ['field1', 'field2'];
         $recordId = 'abc' . rand(1000, 9999999);
 
-        $response = m::mock('Psr\Http\Message\ResponseInterface');
+        $response = $this->getMockBuilder(ResponseInterface::class)->setMethods(['getBody'])->getMockForAbstractClass();
 
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->setMethods(['patch'])->getMockForAbstractClass();
         //Make sure the url contains the passed in data
-        $guzzle->shouldReceive('patch')->with(stringContainsInOrder('Test', $recordId) , \Mockery::type('array'))->once()->andReturn($response);
+        $guzzle
+            ->expects(self::once())
+            ->method('patch')
+            ->with(
+                'http://api.example.com/services/data/'.$apiVersion.'/sobjects/Test/'.$recordId,
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer 123456789abcdefghijk',
+                        'Content-Type' => 'application/json'
+                    ],
+                    'body' => json_encode($data)
+                ]
+            )
+            ->willReturn($response);
+
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
+        $sfClient->setAccessToken($this->getAccessTokenMock($apiVersion));
 
 
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
-        $sfClient->setAccessToken($this->getAccessTokenMock());
-
-
-        $data = $sfClient->updateRecord('Test', $recordId, ['field1', 'field2']);
+        $data = $sfClient->updateRecord('Test', $recordId, $data);
 
         $this->assertTrue($data);
     }
 
-    /** @test */
-    public function client_can_delete_record()
+    public function testCanDeleteRecord()
     {
+        $apiVersion = 'v44.0';
         $recordId = 'abc' . rand(1000, 9999999);
 
-        $response = m::mock('Psr\Http\Message\ResponseInterface');
+        $response = $this->getMockBuilder(ResponseInterface::class)->setMethods(['getBody'])->getMockForAbstractClass();
 
-
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        /** @var ClientInterface|MockObject $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->setMethods(['delete'])->getMockForAbstractClass();
         //Make sure the url contains the passed in data
-        $guzzle->shouldReceive('delete')->with(stringContainsInOrder('Test', $recordId), \Mockery::type('array'))->once()->andReturn($response);
+        $guzzle
+            ->expects(self::once())
+            ->method('delete')
+            ->with(
+                'http://api.example.com/services/data/'.$apiVersion.'/sobjects/Test/' . $recordId,
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer 123456789abcdefghijk',
+                    ],
+                ]
+            )
+            ->willReturn($response);
 
 
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
-        $sfClient->setAccessToken($this->getAccessTokenMock());
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
+        $sfClient->setAccessToken($this->getAccessTokenMock($apiVersion));
 
 
         $data = $sfClient->deleteRecord('Test', $recordId);
@@ -132,56 +200,80 @@ class ClientTest extends TestCase {
         $this->assertTrue($data);
     }
 
-    /** @test */
-    public function client_can_complete_auth_process()
+    public function testCanCompleteAuthProcess()
     {
+        $apiVersion = 'v44.0';
         $recordId = 'abc' . rand(1000, 9999999);
 
-        $response = m::mock('Psr\Http\Message\ResponseInterface');
-        $response->shouldReceive('getBody')->once()->andReturn(json_encode(['id' => $recordId]));
+        $response = $this->getMockBuilder(ResponseInterface::class)->setMethods(['getBody'])->getMockForAbstractClass();
+        $response->expects(self::once())->method('getBody')->willReturn(json_encode(['id' => $recordId]));
 
-
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        /** @var ClientInterface|MockObject $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->setMethods(['post'])->getMockForAbstractClass();
         //Make sure the url contains the passed in data
-        $guzzle->shouldReceive('post')->with(stringContainsInOrder('services/oauth2/token'), \Mockery::type('array'))->once()->andReturn($response);
+        $guzzle
+            ->expects(self::once())
+            ->method('post')->with(
+                'http://login.example.com/services/oauth2/token',
+                [
+                    'form_params' => [
+                        'grant_type' => 'authorization_code',
+                        'client_id' => 'client_id',
+                        'client_secret' => 'client_secret',
+                        'code' => 'authCode',
+                        'redirect_uri' => 'redirectUrl',
+                    ]
+                ]
+            )
+            ->willReturn($response);
 
-
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
-        $sfClient->setAccessToken($this->getAccessTokenMock());
-
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
+        $sfClient->setAccessToken($this->getAccessTokenMock($apiVersion));
 
         $sfClient->authorizeConfirm('authCode', 'redirectUrl');
     }
 
-    /** @test */
-    public function client_can_complete_token_refresh_process()
+    public function testCanCompleteTokenRefreshProcess()
     {
+        $apiVersion = 'v44.0';
         $recordId = 'abc' . rand(1000, 9999999);
 
-        $response = m::mock('Psr\Http\Message\ResponseInterface');
-        $response->shouldReceive('getBody')->once()->andReturn(json_encode(['id' => $recordId]));
+        $response = $this->getMockBuilder(ResponseInterface::class)->setMethods(['getBody'])->getMockForAbstractClass();
+        $response->expects(self::once())->method('getBody')->willReturn(json_encode(['id' => $recordId]));
 
 
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        /** @var ClientInterface|MockObject $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->setMethods(['post'])->getMockForAbstractClass();
         //Make sure the url contains the passed in data
-        $guzzle->shouldReceive('post')->with(stringContainsInOrder('services/oauth2/token'), \Mockery::type('array'))->once()->andReturn($response);
+        $guzzle
+            ->expects(self::once())
+            ->method('post')->with(
+                'http://login.example.com/services/oauth2/token',
+                [
+                    'form_params' => [
+                        'grant_type' => 'refresh_token',
+                        'client_id' => 'client_id',
+                        'client_secret' => 'client_secret',
+                        'refresh_token' => 'refresh123456789abcdefghijk',
+                    ]
+                ]
+            )
+            ->willReturn($response);
 
-
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
-        $accessToken = $this->getAccessTokenMock();
-        $accessToken->shouldReceive('updateFromSalesforceRefresh');
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
+        $accessToken = $this->getAccessTokenMock($apiVersion);
+        $accessToken->expects(self::once())->method('updateFromSalesforceRefresh');
         $sfClient->setAccessToken($accessToken);
 
         $sfClient->refreshToken();
     }
 
-    /** @test */
-    public function client_can_get_login_url()
+    public function tetsClient_can_get_login_url()
     {
-        $guzzle = m::mock('\GuzzleHttp\Client');
+        /** @var ClientInterface $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->getMockForAbstractClass();
 
-
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
         $sfClient->setAccessToken($this->getAccessTokenMock());
 
 
@@ -190,54 +282,78 @@ class ClientTest extends TestCase {
         $this->assertNotFalse(strpos($url, 'redirectUrl'));
     }
 
-    /**
-     * @test
-     * @expectedException        Crunch\Salesforce\Exceptions\RequestException
-     * @expectedExceptionMessage expired authorization code
-     */
-    public function client_can_parse_auth_flow_error()
+    public function testCan_parse_auth_flow_error()
     {
-        //Error Response
-        $errorResponse = m::mock('Psr\Http\Message\ResponseInterface');
-        $errorResponse->shouldReceive('getBody')->once()->andReturn('{"error_description":"expired authorization code","error":"invalid_grant"}');
-        $errorResponse->shouldReceive('getStatusCode')->once()->andReturn(400);
+        self::expectException(RequestException::class);
+        self::expectExceptionMessage(''/*'expired authorization code'*/);
+
+        $apiVersion = 'v44.0';
 
         //Make guzzle throw an exception with the above message
-        $guzzle = m::mock('\GuzzleHttp\Client');
-        $guzzleException = m::mock('GuzzleHttp\Exception\RequestException');
-        $guzzleException->shouldReceive('getResponse')->andReturn($errorResponse);
+        $guzzleException = $this->getMockBuilder(RequestException::class)->disableOriginalConstructor()->setMethods(['getResponse'])->getMock();
 
         //Make sure the url contains the passed in data
-        $guzzle->shouldReceive('post')->with(stringContainsInOrder('services/oauth2/token'), \Mockery::type('array'))->once()->andThrow($guzzleException);
+        /** @var ClientInterface|MockObject $guzzle */
+        $guzzle = $this->getMockBuilder(ClientInterface::class)->setMethods(['post'])->getMockForAbstractClass();
+        $guzzle
+            ->expects(self::once())
+            ->method('post')
+            ->with('http://login.example.com/services/oauth2/token', ['form_params' => [
+                'grant_type' => 'authorization_code',
+                'client_id' => 'client_id',
+                'client_secret' => 'client_secret',
+                'code' => 'authCode',
+                'redirect_uri' => 'redirectUrl',
+            ]])
+            ->willThrowException($guzzleException);
 
         //Setup the client
-        $sfClient = new \Crunch\Salesforce\Client($this->getClientConfigMock(), $guzzle);
-        $sfClient->setAccessToken($this->getAccessTokenMock());
+        $sfClient = new Client($this->getClientConfigMock(), $guzzle);
+        $sfClient->setAccessToken($this->getAccessTokenMock($apiVersion));
 
         //Try the auth flow - this should generate an exception
         $sfClient->authorizeConfirm('authCode', 'redirectUrl');
     }
 
-
     /**
      * Mock the client config interface
-     * @return m\MockInterface
+     * @return ClientConfigInterface|MockObject
      */
     private function getClientConfigMock()
     {
-        $config = m::mock('Crunch\Salesforce\ClientConfigInterface');
-        $config->shouldReceive('getLoginUrl')->once()->andReturn('http://login.example.com');
-        $config->shouldReceive('getClientId')->once()->andReturn('client_id');
-        $config->shouldReceive('getClientSecret')->once()->andReturn('client_secret');
+        $config = $this->getMockBuilder(ClientConfigInterface::class)
+            ->setMethods(['getLogin', 'getClientId', 'getClientSecret', 'getApiVersion'])
+            ->getMockForAbstractClass();
+
+        $config->expects(self::once())->method('getLoginUrl')->willReturn('http://login.example.com');
+        $config->expects(self::once())->method('getClientId')->willReturn('client_id');
+        $config->expects(self::once())->method('getClientSecret')->willReturn('client_secret');
+        $config->expects(self::once())->method('getApiVersion')->willReturn('v44.0');
         return $config;
     }
 
-    private function getAccessTokenMock()
+    /**
+     * @param string $apiVersion
+     * @return MockObject|AccessToken
+     */
+    private function getAccessTokenMock(string $apiVersion)
     {
-        $accessToken = m::mock('Crunch\Salesforce\AccessToken');
-        $accessToken->shouldReceive('getApiUrl')->andReturn('http://api.example.com');
-        $accessToken->shouldReceive('getAccessToken')->andReturn('123456789abcdefghijk');
-        $accessToken->shouldReceive('getRefreshToken')->andReturn('refresh123456789abcdefghijk');
+        $accessToken = $this->getMockBuilder(AccessToken::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'getApiUrl',
+                'getAccessToken',
+                'getRefreshToken',
+                'getApiVersion',
+                'updateFromSalesforceRefresh'
+            ])
+            ->getMock();
+
+        $accessToken->expects(self::once())->method('getApiUrl')->willReturn('http://api.example.com');
+        $accessToken->expects(self::any())->method('getAccessToken')->willReturn('123456789abcdefghijk');
+        $accessToken->expects(self::any())->method('getRefreshToken')->willReturn('refresh123456789abcdefghijk');
+        $accessToken->expects(self::any())->method('getApiVersion')->willReturn($apiVersion);
+
         return $accessToken;
     }
 }

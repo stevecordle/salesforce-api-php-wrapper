@@ -15,11 +15,17 @@ class ClientConfig implements ClientConfigInterface {
      */
     private $clientSecret;
 
-    public function __construct($loginUrl, $clientId, $clientSecret)
+    /**
+     * @var
+     */
+    private $apiVersion;
+
+    public function __construct($loginUrl, $clientId, $clientSecret, $apiVersion)
     {
         $this->loginUrl = $loginUrl;
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
+        $this->apiVersion = $apiVersion;
     }
 
     /**
@@ -44,5 +50,13 @@ class ClientConfig implements ClientConfigInterface {
     public function getClientSecret()
     {
         return $this->clientSecret;
+    }
+
+    /**
+     * @return string
+     */
+    public function getApiVersion()
+    {
+        return $this->apiVersion;
     }
 }

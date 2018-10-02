@@ -1,18 +1,27 @@
 <?php 
 
-class AccessTokenTest extends TestCase {
+namespace Crunch\Salesforce\Tests;
 
-    /** @test */
-    public function can_create_access_token()
+use Carbon\Carbon;
+use Crunch\Salesforce\AccessToken;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * @covers \Crunch\Salesforce\AccessToken
+ */
+class AccessTokenTest extends TestCase
+{
+
+    public function testCanCreateAccessToken()
     {
-        $issueDate  = \Carbon\Carbon::now();
-        $expiryDate = \Carbon\Carbon::now()->addHour();
+        $issueDate  = Carbon::now();
+        $expiryDate = Carbon::now()->addHour();
 
-        $token = new \Crunch\Salesforce\AccessToken(
+        $token = new AccessToken(
             'abc123',
             $issueDate,
             $expiryDate,
-            'scopes',
+            ['scopes'],
             'type',
             'refresh-token',
             'signature',
@@ -20,25 +29,24 @@ class AccessTokenTest extends TestCase {
             'http://example.com'
         );
 
-        $this->assertInstanceOf(\Crunch\Salesforce\AccessToken::class, $token);
+        self::assertInstanceOf(AccessToken::class, $token);
 
-        $this->assertEquals('access-token', $token->getAccessToken());
-        $this->assertEquals('refresh-token', $token->getRefreshToken());
-        $this->assertEquals('http://example.com', $token->getApiUrl());
-        $this->assertEquals('scopes', $token->getScope());
+        self::assertEquals('access-token', $token->getAccessToken());
+        self::assertEquals('refresh-token', $token->getRefreshToken());
+        self::assertEquals('http://example.com', $token->getApiUrl());
+        self::assertEquals(['scopes'], $token->getScope());
 
-        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateExpires());
-        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateIssued());
+        self::assertInstanceOf(Carbon::class, $token->getDateExpires());
+        self::assertInstanceOf(Carbon::class, $token->getDateIssued());
     }
 
-    /** @test */
-    public function token_refresh_is_correct()
+    public function testTokenRefreshIsCorrect()
     {
-        $token1 = new \Crunch\Salesforce\AccessToken(
+        $token1 = new AccessToken(
             'abc123',
-            \Carbon\Carbon::now(),
-            \Carbon\Carbon::now()->addHour(),
-            'scopes',
+            Carbon::now(),
+            Carbon::now()->addHour(),
+            ['scopes'],
             'type',
             'refresh-token',
             'signature',
@@ -47,28 +55,27 @@ class AccessTokenTest extends TestCase {
         );
         $this->assertFalse($token1->needsRefresh());
 
-        $token2 = new \Crunch\Salesforce\AccessToken(
+        $token2 = new AccessToken(
             'abc123',
-            \Carbon\Carbon::now()->subHours(2),
-            \Carbon\Carbon::now()->subHour(),
-            'scopes',
+            Carbon::now()->subHours(2),
+            Carbon::now()->subHour(),
+            ['scopes'],
             'type',
             'refresh-token',
             'signature',
             'access-token',
             'http://example.com'
         );
-        $this->assertTrue($token2->needsRefresh());
+        self::assertTrue($token2->needsRefresh());
     }
 
-    /** @test */
-    public function can_convert_to_json()
+    public function testCanConvertToJson()
     {
-        $token = new \Crunch\Salesforce\AccessToken(
+        $token = new AccessToken(
             'abc123',
-            \Carbon\Carbon::now(),
-            \Carbon\Carbon::now()->addHour(),
-            'scopes',
+            Carbon::now(),
+            Carbon::now()->addHour(),
+            ['scopes'],
             'type',
             'refresh-token',
             'signature',
@@ -76,20 +83,18 @@ class AccessTokenTest extends TestCase {
             'http://example.com'
         );
 
-        $this->isJson($token->toJson());
-        $this->isJson((string)$token, 'Token casts to a json string');
+        self::assertJson($token->toJson());
+        self::assertJson((string)$token, 'Token casts to a json string');
 
     }
 
-
-    /** @test */
-    public function updates_correctly()
+    public function testUpdatesCorrectly()
     {
-        $token = new \Crunch\Salesforce\AccessToken(
+        $token = new AccessToken(
             'abc123',
-            \Carbon\Carbon::now(),
-            \Carbon\Carbon::now()->addHour(),
-            'scopes',
+            Carbon::now(),
+            Carbon::now()->addHour(),
+            ['scopes'],
             'type',
             'refresh-token',
             'signature',
@@ -107,10 +112,9 @@ class AccessTokenTest extends TestCase {
         ]);
 
         $this->assertEquals('new-access-token', $token->getAccessToken(), 'access token was updated');
-        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateExpires());
-        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateIssued());
+        $this->assertInstanceOf(Carbon::class, $token->getDateExpires());
+        $this->assertInstanceOf(Carbon::class, $token->getDateIssued());
 
         $this->assertEquals($time, $token->getDateIssued()->timestamp, 'Timestamp saved and converted correctly');
-
     }
 }

@@ -1,20 +1,29 @@
 <?php
 
-use \Mockery as m;
+namespace Crunch\Salesforce\Tests;
 
-class LocalFileStoreTest extends TestCase
+use Crunch\Salesforce\AccessTokenGenerator;
+use Crunch\Salesforce\TokenStore\LocalFile;
+use Crunch\Salesforce\TokenStore\LocalFileConfigInterface;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * @covers \Crunch\Salesforce\TokenStore\LocalFile
+ */
+class LocalFileTest extends TestCase
 {
 
-    /** @test */
-    public function file_store_can_be_instantiated()
+    public function testCanBeInstantiated()
     {
-        $tokenGenerator = m::mock('Crunch\Salesforce\AccessTokenGenerator');
-        $config = m::mock('Crunch\Salesforce\TokenStore\LocalFileConfigInterface');
-        $config->shouldReceive('getFilePath')->once()->andReturn('/foo');
-        $fileStore = new \Crunch\Salesforce\TokenStore\LocalFile($tokenGenerator, $config);
+        /** @var AccessTokenGenerator $tokenGenerator */
+        $tokenGenerator = $this->getMockBuilder(AccessTokenGenerator::class)->disableOriginalConstructor()->getMock();
 
-        $this->assertInstanceOf(\Crunch\Salesforce\TokenStore\LocalFile::class, $fileStore);
+        /** @var LocalFileConfigInterface|MockObject $config */
+        $config = $this->getMockBuilder(LocalFileConfigInterface::class)->getMockForAbstractClass();
+        $config->expects(self::once())->method('getFilePath')->willReturn('/foo');
+        $fileStore = new LocalFile($tokenGenerator, $config);
+
+        self::assertInstanceOf(LocalFile::class, $fileStore);
     }
-
-
 }

@@ -1,12 +1,19 @@
 <?php
 
-use \Mockery as m;
+namespace Crunch\Salesforce\Tests;
 
+use Carbon\Carbon;
+use Crunch\Salesforce\AccessToken;
+use Crunch\Salesforce\AccessTokenGenerator;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * @covers \Crunch\Salesforce\AccessTokenGenerator
+ */
 class AccessTokenGeneratorTest extends TestCase
 {
 
-    /** @test */
-    public function token_gets_generated_from_json()
+    public function testTokenGetsGeneratedFromJson()
     {
         $jsonToken = json_encode([
             'id' => '',
@@ -19,14 +26,13 @@ class AccessTokenGeneratorTest extends TestCase
             'accessToken' => '',
             'apiUrl' => '',
         ]);
-        $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+        $tokenGenerator = new AccessTokenGenerator();
         $token = $tokenGenerator->createFromJson($jsonToken);
 
-        $this->assertInstanceOf(\Crunch\Salesforce\AccessToken::class, $token, 'Token generated not an instance of AccessToken');
+        self::assertInstanceOf(AccessToken::class, $token, 'Token generated not an instance of AccessToken');
     }
 
-    /** @test */
-    public function token_gets_generated_from_sf_response()
+    public function testTokenGetsGeneratedFromSalesforceResponse()
     {
         $responseData = [
             'id' => '',
@@ -38,14 +44,13 @@ class AccessTokenGeneratorTest extends TestCase
             'access_token' => '',
             'instance_url' => '',
         ];
-        $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+        $tokenGenerator = new AccessTokenGenerator();
         $token = $tokenGenerator->createFromSalesforceResponse($responseData);
 
-        $this->assertInstanceOf(\Crunch\Salesforce\AccessToken::class, $token, 'Token generated not an instance of AccessToken');
+        $this->assertInstanceOf(AccessToken::class, $token, 'Token generated not an instance of AccessToken');
     }
 
-    /** @test */
-    public function token_gets_generated_from_limited_sf_response()
+    public function testTokenGetsGeneratedFromLimitedSalesforceResponse()
     {
         $responseData = [
             'id' => '',
@@ -53,14 +58,13 @@ class AccessTokenGeneratorTest extends TestCase
             'access_token' => '',
             'instance_url' => '',
         ];
-        $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+        $tokenGenerator = new AccessTokenGenerator();
         $token = $tokenGenerator->createFromSalesforceResponse($responseData);
 
-        $this->assertInstanceOf(\Crunch\Salesforce\AccessToken::class, $token, 'Token generated not an instance of AccessToken');
+        $this->assertInstanceOf(AccessToken::class, $token, 'Token generated not an instance of AccessToken');
     }
 
-    /** @test */
-    public function token_date_generated_from_sf_response()
+    public function testTokenDateGeneratedFromSalesforceResponse()
     {
         $time = time();
         $responseData = [
@@ -73,12 +77,12 @@ class AccessTokenGeneratorTest extends TestCase
             'access_token' => '',
             'instance_url' => '',
         ];
-        $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+        $tokenGenerator = new AccessTokenGenerator();
         $token = $tokenGenerator->createFromSalesforceResponse($responseData);
 
-        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateIssued(), 'Token issued date not a carbon instance');
-        $this->assertEquals($time, $token->getDateIssued()->timestamp, 'Token issue timestamp doesnt match');
-        $this->assertEquals($time + (60*55), $token->getDateExpires()->timestamp, 'Token expiry time not 55 minutes after creation');
+        self::assertInstanceOf(Carbon::class, $token->getDateIssued(), 'Token issued date not a carbon instance');
+        self::assertEquals($time, $token->getDateIssued()->timestamp, 'Token issue timestamp doesnt match');
+        self::assertEquals($time + (60*55), $token->getDateExpires()->timestamp, 'Token expiry time not 55 minutes after creation');
     }
 
     /** @test */
@@ -97,12 +101,11 @@ class AccessTokenGeneratorTest extends TestCase
             'accessToken' => '',
             'apiUrl' => '',
         ]);
-        $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
+        $tokenGenerator = new AccessTokenGenerator();
         $token = $tokenGenerator->createFromJson($jsonToken);
 
-        $this->assertInstanceOf(\Carbon\Carbon::class, $token->getDateIssued(), 'Token issued date not a carbon instance');
-        $this->assertEquals($issueDate, $token->getDateIssued()->format('Y-m-d H:i:s'), 'Token issue timestamp doesnt match');
-        $this->assertEquals($expiryDate, $token->getDateExpires()->format('Y-m-d H:i:s'), 'Token expiry time not 1 hour after creation');
+        self::assertInstanceOf(Carbon::class, $token->getDateIssued(), 'Token issued date not a carbon instance');
+        self::assertEquals($issueDate, $token->getDateIssued()->format('Y-m-d H:i:s'), 'Token issue timestamp doesnt match');
+        self::assertEquals($expiryDate, $token->getDateExpires()->format('Y-m-d H:i:s'), 'Token expiry time not 1 hour after creation');
     }
-
 }

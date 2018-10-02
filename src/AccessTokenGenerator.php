@@ -1,8 +1,11 @@
-<?php namespace Crunch\Salesforce;
+<?php
+
+namespace Crunch\Salesforce;
 
 use Carbon\Carbon;
 
-class AccessTokenGenerator {
+class AccessTokenGenerator
+{
 
     /**
      * Create an access token from stored json data
@@ -56,7 +59,7 @@ class AccessTokenGenerator {
     public function createFromSalesforceResponse(array $salesforceToken)
     {
 
-        $dateIssued = Carbon::createFromTimestamp((int)($salesforceToken['issued_at'] / 1000));
+        $dateIssued = Carbon::createFromTimestamp(((int)$salesforceToken['issued_at']) / 1000);
 
         $dateExpires = $dateIssued->copy()->addHour()->subMinutes(5);
 
