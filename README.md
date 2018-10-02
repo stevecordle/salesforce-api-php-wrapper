@@ -12,17 +12,23 @@ Methods for setting up a connection, requesting an access token, refreshing the 
 
 ## Getting started
 
-__Installation:__
+**Installation:**
 The package should be installed through composer and locked to a major version
 ```
-composer require crunch-accounting/salesforce-api:~1.0
+composer require timesplinter/salesforce-api:dev-master@dev
 ```
 
-__Creating an oauth token:__
+**Creating an oauth token:**
 You need to fetch an access token for a user, all followup requests will be performed against this user.
 
+Through the `authorization_code` OAuth flow (e.x. for a 3rd party app):
 ```php
-$sfClient = \Crunch\Salesforce\Client::create('https://test.salesforce.com/', 'clientid', 'clientsecret');
+$sfClient = \Crunch\Salesforce\Client::create(
+    'https://test.salesforce.com/', 
+    'clientid', 
+    'clientsecret',
+    'v44.0'
+);
 
 if ( ! isset($_GET['code'])) {
 
@@ -36,25 +42,39 @@ if ( ! isset($_GET['code'])) {
     $tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
     $accessToken = $tokenGenerator->createFromSalesforceResponse($token);
     
-    $_SESSION['accessToken'] = $accessToken->toJson();
-
+    $sfClient->setAccessToken($accessToken);
 }
+```
 
+Through the `password` OAuth flow (e.x. for backend/API-only user usage):
+```php
+$sfClient = \Crunch\Salesforce\Client::create(
+    'https://test.salesforce.com/', 
+    'clientid', 
+    'clientsecret',
+    'v44.0'
+);
+
+$response = $sfClient->login('email', 'password', 'securityToken');
+
+$tokenGenerator = new AccessTokenGenerator();
+$accessToken = $tokenGenerator->createFromSalesforceResponse($response);
+
+$sfClient->setAccessToken($accessToken);
 ```
 
 
-__Performing an action:__
+**Performing an action:**
 Once you have an access token you can perform requests against the API.
 
 ```php
 $sfClient = \Crunch\Salesforce\Client::create('https://test.salesforce.com/', 'clientid', 'clientsecret');
-$tokenGenerator = new \Crunch\Salesforce\AccessTokenGenerator();
-$accessToken = $tokenGenerator->createFromJson($_SESSION['accessToken']);
+
+$accessToken = /* the access token previously obtained */;
 $sfClient->setAccessToken($accessToken);
 
 $results = $sfClient->search('SELECT Name, Email FROM Lead Limit 10');
 print_r($results);
-
 ```
 
 The token will expire after an hour so you should make sure you're checking the expiry time and refreshing accordingly.

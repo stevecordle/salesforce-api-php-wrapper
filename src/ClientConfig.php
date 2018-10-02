@@ -1,6 +1,6 @@
 <?php namespace Crunch\Salesforce;
 
-class ClientConfig implements ClientConfigInterface {
+final class ClientConfig implements ClientConfigInterface {
 
     /**
      * @var
