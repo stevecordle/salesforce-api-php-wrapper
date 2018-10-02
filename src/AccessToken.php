@@ -1,4 +1,6 @@
-<?php namespace Crunch\Salesforce;
+<?php
+
+namespace Crunch\Salesforce;
 
 use Carbon\Carbon;
 

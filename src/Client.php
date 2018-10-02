@@ -313,7 +313,7 @@ class Client
                 $error = json_decode($e->getResponse()->getBody(), true);
                 throw new AuthenticationException($error[0]['errorCode'], $error[0]['message']);
             }
-            throw new RequestException($e->getMessage(), (string)$e->getResponse()->getBody());
+            throw new RequestException($e->getMessage(), (string) $e->getResponse()->getBody());
         }
 
     }

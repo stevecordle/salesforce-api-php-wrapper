@@ -1,4 +1,6 @@
-<?php namespace Crunch\Salesforce\Exceptions;
+<?php
+
+namespace Crunch\Salesforce\Exceptions;
 
 class RequestException extends \Exception
 {
@@ -56,5 +58,4 @@ class RequestException extends \Exception
     {
         return $this->errorCode;
     }
-
 }

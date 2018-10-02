@@ -1,6 +1,9 @@
-<?php namespace Crunch\Salesforce;
+<?php
 
-interface ClientConfigInterface {
+namespace Crunch\Salesforce;
+
+interface ClientConfigInterface
+{
 
     /**
      * @return string

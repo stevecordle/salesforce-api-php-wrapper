@@ -1,6 +1,9 @@
-<?php namespace Crunch\Salesforce\Exceptions;
+<?php
 
-class AuthenticationException extends \Exception {
+namespace Crunch\Salesforce\Exceptions;
+
+class AuthenticationException extends \Exception
+{
 
     /**
      * @var string
