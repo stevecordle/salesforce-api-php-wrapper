@@ -1,7 +1,7 @@
-[![Current Version](https://img.shields.io/packagist/v/crunch-accounting/salesforce-api.svg?style=flat-square)](https://packagist.org/packages/timesplinter/salesforce-api)
-[![License](https://img.shields.io/packagist/l/crunch-accounting/salesforce-api.svg?style=flat-square)](https://packagist.org/packages/timesplinter/salesforce-api)
-[![Scrutinizer](https://img.shields.io/scrutinizer/g/crunch-accounting/salesforce-api-php-wrapper.svg?style=flat-square)](https://scrutinizer-ci.com/g/TiMESPLiNTER/salesforce-api-php-wrapper/)
-[![Travis](https://img.shields.io/travis/crunch-accounting/salesforce-api-php-wrapper.svg?style=flat-square)](https://travis-ci.org/TiMESPLiNTER/salesforce-api-php-wrapper)
+[![Current Version](https://img.shields.io/packagist/v/timesplinter/salesforce-api.svg?style=flat-square)](https://packagist.org/packages/timesplinter/salesforce-api)
+[![License](https://img.shields.io/packagist/l/timesplinter/salesforce-api.svg?style=flat-square)](https://packagist.org/packages/timesplinter/salesforce-api)
+[![Scrutinizer](https://img.shields.io/scrutinizer/g/TiMESPLiNTER/salesforce-api-php-wrapper.svg?style=flat-square)](https://scrutinizer-ci.com/g/TiMESPLiNTER/salesforce-api-php-wrapper/)
+[![Travis](https://img.shields.io/travis/TiMESPLiNTER/salesforce-api-php-wrapper.svg?style=flat-square)](https://travis-ci.org/TiMESPLiNTER/salesforce-api-php-wrapper)
 
 # Salesforce PHP Library
 
